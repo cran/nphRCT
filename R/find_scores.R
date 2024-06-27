@@ -17,6 +17,7 @@
 #' @template rho
 #' @template gamma
 #' @param tau Parameter \eqn{\tau} in the RMST (`"rmst"`) or milestone analysis  (`"ms"`) test.
+#' @param timefix Deal with floating point issues (as in the survival package). Default is TRUE. May need to set FALSE for simulated data.
 #' @return 
 #' Data frame. Each row corresponds to an event or censoring time.
 #' At each time specified in `t_j` the columns indicate
@@ -67,17 +68,20 @@
 #' @export
 
 find_scores<-function(formula,
-                       data,
-                       method,
-                       t_star = NULL,
-                       s_star = NULL,
-                       rho = NULL,
-                       gamma = NULL,
-                       tau=NULL){
+                      data,
+                      method,
+                      t_star = NULL,
+                      s_star = NULL,
+                      rho = NULL,
+                      gamma = NULL,
+                      tau=NULL,
+                      timefix = TRUE){
+  
   method<-match.arg(method,c("mw","lr","fh","rmst","ms"))
   
   #weighted log rank tests
   if(method %in% c("mw","lr","fh")){
+    
     w<-find_weights(formula=formula,
                    data=data,
                    method=method,
@@ -85,11 +89,14 @@ find_scores<-function(formula,
                    s_star = s_star,
                    rho = rho,
                    gamma = gamma,
-                   include_cens=TRUE)
+                   include_cens=TRUE,
+                   timefix = timefix)
     
     df <- find_at_risk(formula=formula,
-                               data=data,
-                               include_cens=TRUE)
+                       data=data,
+                       include_cens=TRUE,
+                       timefix = timefix)
+    
     df$score_censored<-with(df,-cumsum(w*(n_event/n_risk)))
     df$score_event<-with(df,score_censored+w)
     
@@ -112,17 +119,17 @@ find_scores<-function(formula,
   #Restricted mean survival time
   if(method=="rmst"){
     df <-find_pseudovalues(formula=formula,
-                      data=data,
-                      method = "rmst",
-                      tau = tau)
+                           data=data,
+                           method = "rmst",
+                           tau = tau)
   }
   
   #Milestone
   if(method=="ms"){
     df <-find_pseudovalues(formula=formula,
-                                data=data,
-                                method = "ms",
-                                tau = tau)
+                           data=data,
+                           method = "ms",
+                           tau = tau)
   }
 
   ###########################################

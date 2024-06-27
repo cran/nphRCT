@@ -82,8 +82,8 @@ find_weights<-function(formula,
   Surv <- survival::Surv
   formula_km<-stats::as.formula(paste0("Surv(",time_col,",",status_col,")~1"))
   km_fit <- survival::survfit(formula_km,
-                                data = data,
-                                timefix = timefix)
+                              data = data,
+                              timefix = timefix)
   if(include_cens==TRUE){
     t_j <- km_fit$time
     S_hat <- km_fit$surv
